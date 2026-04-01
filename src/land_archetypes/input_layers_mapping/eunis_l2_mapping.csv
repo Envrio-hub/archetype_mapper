@@ -1,0 +1,45 @@
+Value,EUNIS,Label
+9,X1,X1 - Estuaries
+10,X2_3,X2_3 - Coastal lagoons
+11,B1,B1 - Coastal dunes and sandy shores
+12,B2,B2 - Coastal shingle
+14,C1,C1 - Surface standing waters
+15,C2,C2 - Surface running waters
+21,D5,"D5 - Sedge and reedbeds, normally without free-standing water"
+22,D6,D6 - Inland saline and brackish marshes and reedbeds
+23,E1,E1 - Dry grasslands
+24,E2,E2 - Mesic grasslands
+25,E3,E3 - Seasonally wet and wet grasslands
+26,E4,E4 - Alpine and subalpine grasslands
+28,E6,E6 - Inland salt steppes
+31,F2,"F2 - Arctic, alpine and subalpine scrub"
+32,F3,F3 - Temperate and mediterranean-montane scrub
+34,F5,"F5 - Maquis, arborescent matorral and thermo-Mediterranean brushes"
+36,F7,"F7 - Spiny Mediterranean heaths (phrygana, hedgehog-heaths and related coastal cliff vegetation)"
+38,F9,F9 - Riverine and fen scrubs
+40,FB,FB - Shrub plantations
+41,G1,G1 - Broadleaved deciduous woodland
+42,G2,G2 - Broadleaved evergreen woodland
+43,G3,G3 - Coniferous woodland
+44,G4,G4 - Mixed deciduous and coniferous woodland
+45,G5,"G5 - Lines of trees, small anthropogenic woodlands, recently felled woodland, early-stage woodland and coppice"
+47,H2,H2 - Screes
+48,H3,"H3 - Inland cliffs, rock pavements and outcrops"
+50,H5,H5 - Miscellaneous inland habitats with very sparse or no vegetation
+52,I1,I1 - Arable land and market gardens
+53,I2,I2 - Cultivated areas of gardens and parks
+54,J1,"J1 - Buildings of cities, towns and villages"
+55,J2,J2 - Low density buildings
+56,J3,J3 - Extractive industrial sites
+57,J4,J4 - Transport networks and other constructed hard-surfaced areas
+58,J5,J5 - Highly artificial man-made waters and associated structures
+59,J6,J6 - Waste deposits
+100,A100,A100 - Littoral undetermined substrate with no sea ice presence
+105,A105,A105 - Littoral sand with no sea ice presence
+106,A106,A106 - Littoral mud with no sea ice presence
+200,A200,A200 - Infralittoral undetermined substrate with no sea ice presence
+205,A205,A205 - Infralittoral sand with no sea ice presence
+206,A206,A206 - Infralittoral mud with no sea ice presence
+300,A300,A300 - Circalittoral undetermined substrate with no sea ice presence
+305,A305,A305 - Circalittoral sand with no sea ice presence
+306,A306,A306 - Circalittoral mud with no sea ice presence
