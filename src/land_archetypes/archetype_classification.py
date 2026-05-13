@@ -1,9 +1,10 @@
 from typing import Dict, Any, Iterable, Optional
+import copy
 import xarray as xr
 import numpy as np
 
 class ArchetypeClassification():
-    
+
     def derive_archetype_raster_map(
             self,
             output_path: str,
@@ -15,16 +16,39 @@ class ArchetypeClassification():
             clc_code_map: Dict[str, np.ndarray],
             output_nodata: int = 255,
             precedence: Optional[list[str]] = None,
+            rule_overrides: Optional[Dict[str, Dict[str, Any]]] = None,
             dem_key: str = "dem",
+            precip_key: str = "mean_precip",
+            temp_key: str = "mean_temp",
             compress: Optional[str] = "LZW"
             ) -> xr.DataArray:
         """
         Produces a UInt8 archetype raster with class IDs (1..N) and NoData=255.
+        Optionally uses mean annual precipitation (mm) and mean annual temperature (°C)
+        rasters for climate-informed refinement. Pass them in `ras` under the keys
+        defined by `precip_key` and `temp_key`. If absent, climate constraints are skipped
+        regardless of what is defined in the rules.
+
+        rule_overrides:
+            Per-archetype constraint overrides applied on top of the loaded rules.
+            Only the specified fields are updated; all other rule fields remain unchanged.
+            The buffer rasters for coastline/riverline proximity must be pre-generated
+            with the desired buffer distance via GeoprocessingUtilities.create_line_buffer_raster.
+
+            Example — adjust elevation for D2, set a precipitation window for C4:
+
+                rule_overrides = {
+                    "D2": {"elevation_constraint": [500, 2000]},
+                    "C4": {"mean_annual_precip_constraint": [100, 600]},
+                }
         """
         required = {"clc", "eunis", "coast_buffer", "river_buffer", "imperviousness", "population_density"}
         missing = required - set(ras.keys())
         if missing:
             raise ValueError(f"Missing required rasters: {missing}")
+
+        if rule_overrides:
+            rules = self._apply_overrides(rules, rule_overrides)
 
         if precedence is None:
             precedence = ["A2", "A3", "A1", "A4", "B3", "B2", "B1", "B4", "B5", "D1", "D2", "C2", "C3", "C1", "C4"]
@@ -36,6 +60,8 @@ class ArchetypeClassification():
         imp = ras["imperviousness"]
         pop = ras["population_density"]
         dem = ras.get(dem_key, None)
+        precip = ras.get(precip_key, None)
+        temp = ras.get(temp_key, None)
 
         key_to_id = {k: i + 1 for i, k in enumerate(precedence)}
         out = xr.full_like(clc, fill_value=output_nodata, dtype=np.uint8).rio.write_nodata(output_nodata)
@@ -74,7 +100,7 @@ class ArchetypeClassification():
             if coast_raw is None:
                 m_coast = xr.ones_like(coast_buf, dtype=bool)
             else:
-                coast_req = self._as_int01(coast_raw)  # expects 0/1-like
+                coast_req = self._as_int01(coast_raw)
                 m_coast = (coast_buf == 1) if coast_req == 1 else (coast_buf == 0)
 
             if river_raw is None:
@@ -87,6 +113,8 @@ class ArchetypeClassification():
             elev_rng = self._get_range(rule, ["elevation_constraint"])
             imp_rng = self._get_range(rule, ["imperviousness_constraint", "imperviousness_constraints"])
             pop_rng = self._get_range(rule, ["population_density_constraint"])
+            precip_rng = self._get_range(rule, ["mean_annual_precip_constraint"])
+            temp_rng = self._get_range(rule, ["mean_annual_temp_constraint"])
 
             m_elev = xr.ones_like(clc, dtype=bool)
             if dem is not None and elev_rng is not None and not (elev_rng == (0.0, 0.0)):
@@ -100,7 +128,16 @@ class ArchetypeClassification():
             if pop_rng is not None and not (pop_rng == (0.0, 0.0)):
                 m_pop = (pop >= pop_rng[0]) & (pop <= pop_rng[1])
 
-            mask = m_eunis & m_clc & m_coast & m_river & m_elev & m_imp & m_pop
+            # Climate constraints: active only when both the raster and a non-null rule range are provided
+            m_precip = xr.ones_like(clc, dtype=bool)
+            if precip is not None and precip_rng is not None:
+                m_precip = (precip >= precip_rng[0]) & (precip <= precip_rng[1])
+
+            m_temp = xr.ones_like(clc, dtype=bool)
+            if temp is not None and temp_rng is not None:
+                m_temp = (temp >= temp_rng[0]) & (temp <= temp_rng[1])
+
+            mask = m_eunis & m_clc & m_coast & m_river & m_elev & m_imp & m_pop & m_precip & m_temp
 
             # first-match-wins
             out = xr.where((out == output_nodata) & mask, np.uint8(key_to_id[key]), out)
@@ -108,12 +145,30 @@ class ArchetypeClassification():
         out.attrs["class_id_lookup"] = {k: int(v) for k, v in key_to_id.items()}
         out.rio.to_raster(f"{output_path}/{archetype_map_name}", compress=compress)
         return out
-    
+
+    @staticmethod
+    def _apply_overrides(
+            rules: Dict[str, Any],
+            overrides: Dict[str, Dict[str, Any]],
+    ) -> Dict[str, Any]:
+        unknown = set(overrides) - set(rules)
+        if unknown:
+            raise ValueError(
+                f"rule_overrides contains unknown archetype keys: {unknown}. "
+                f"Valid keys are: {sorted(rules.keys())}"
+            )
+        rules = copy.deepcopy(rules)
+        for key, fields in overrides.items():
+            rules[key].update(fields)
+        return rules
+
     @staticmethod
     def _get_range(rule: Dict[str, Any], keys: Iterable[str]) -> Optional[tuple[float, float]]:
         for k in keys:
             if k in rule:
                 v = rule[k]
+                if v is None:
+                    return None
                 if isinstance(v, (list, tuple)) and len(v) == 2:
                     return float(v[0]), float(v[1])
         return None
