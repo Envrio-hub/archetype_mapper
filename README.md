@@ -1,6 +1,6 @@
 # archetype_mapper
 
-A Python library for deriving landscape archetype and Climate-Land Unit rasters
+A Python library for deriving Landscape Archetype and Climate-Land Unit rasters
 as geospatial **exposure layers** in support of climate risk assessment.
 
 ---
@@ -9,7 +9,7 @@ as geospatial **exposure layers** in support of climate risk assessment.
 
 In climate risk assessment, **exposure** describes what is present in a location that
 could be adversely affected — the landscape, its structural character, and the communities
-and systems embedded within it. `landarchetypes` operationalises this by classifying
+and systems embedded within it. `LandArchetypes` operationalises this by classifying
 the landscape into discrete, spatially explicit exposure units.
 
 Two levels of exposure characterisation are available:
@@ -33,7 +33,7 @@ form `C4-1`, `C4-2`, encoding both structural identity and climate variant.
 ## Installation
 
 ```bash
-pip install landarchetypes
+pip install land-archetypes
 ```
 
 Requires Python ≥ 3.12.

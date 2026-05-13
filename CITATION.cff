@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 type: software
-title: "landarchetypes"
+title: "LandArchetypes"
 abstract: >-
   A Python library for deriving landscape archetype and Climate-Land Unit
   rasters as geospatial exposure layers in support of climate risk assessment.
