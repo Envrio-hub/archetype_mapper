@@ -81,3 +81,23 @@ def simple_archetype_raster(make_da):
     da = make_da(data, nodata=255, dtype=np.uint8)
     da.attrs["class_id_lookup"] = {"B1": 1, "C4": 2}
     return da
+
+
+@pytest.fixture
+def projected_archetype_raster():
+    """2×3 UInt8 raster in EPSG:3035 with 100 m resolution (1 ha per pixel).
+    Row 0 = B1 (id=1, 3 pixels = 3 ha), row 1 = C4 (id=2, 3 pixels = 3 ha).
+    """
+    import rioxarray  # noqa: F401
+    data = np.array([[1, 1, 1], [2, 2, 2]], dtype=np.uint8)
+    da = xr.DataArray(
+        data,
+        dims=["y", "x"],
+        coords={
+            "y": [2_900_100.0, 2_900_000.0],       # 100 m apart, north → south
+            "x": [4_500_000.0, 4_500_100.0, 4_500_200.0],  # 100 m apart
+        },
+    )
+    da = da.rio.write_crs("EPSG:3035").rio.write_nodata(255)
+    da.attrs["class_id_lookup"] = {"B1": 1, "C4": 2}
+    return da
