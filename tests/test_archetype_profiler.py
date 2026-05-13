@@ -117,6 +117,49 @@ class TestProfileCLU:
         assert set(report["required_hazard_layers"]) == {"heatwaves", "wildfires", "drought"}
 
 
+class TestAreaSummary:
+    def test_missing_lookup_raises(self, projected_archetype_raster, simple_rules):
+        del projected_archetype_raster.attrs["class_id_lookup"]
+        with pytest.raises(ValueError, match="class_id_lookup"):
+            ArchetypeProfiler.area_summary(projected_archetype_raster, simple_rules)
+
+    def test_geographic_crs_raises(self, simple_archetype_raster, simple_rules):
+        # simple_archetype_raster uses EPSG:4326 (geographic)
+        with pytest.raises(ValueError, match="geographic"):
+            ArchetypeProfiler.area_summary(simple_archetype_raster, simple_rules)
+
+    def test_returns_dataframe(self, projected_archetype_raster, simple_rules):
+        import pandas as pd
+        result = ArchetypeProfiler.area_summary(projected_archetype_raster, simple_rules)
+        assert isinstance(result, pd.DataFrame)
+
+    def test_correct_columns(self, projected_archetype_raster, simple_rules):
+        result = ArchetypeProfiler.area_summary(projected_archetype_raster, simple_rules)
+        assert list(result.columns) == ["code", "name", "pixel_count", "area_ha", "coverage_pct"]
+
+    def test_correct_row_count(self, projected_archetype_raster, simple_rules):
+        result = ArchetypeProfiler.area_summary(projected_archetype_raster, simple_rules)
+        assert len(result) == 2
+
+    def test_area_ha_correct(self, projected_archetype_raster, simple_rules):
+        # 100 m × 100 m = 10 000 m² = 1 ha per pixel; 3 pixels → 3.0 ha each
+        result = ArchetypeProfiler.area_summary(projected_archetype_raster, simple_rules)
+        assert set(result["area_ha"]) == {3.0}
+
+    def test_coverage_sums_to_100(self, projected_archetype_raster, simple_rules):
+        result = ArchetypeProfiler.area_summary(projected_archetype_raster, simple_rules)
+        assert abs(result["coverage_pct"].sum() - 100.0) < 0.01
+
+    def test_sorted_descending(self, projected_archetype_raster, simple_rules):
+        result = ArchetypeProfiler.area_summary(projected_archetype_raster, simple_rules)
+        pct = result["coverage_pct"].tolist()
+        assert pct == sorted(pct, reverse=True)
+
+    def test_both_archetypes_present(self, projected_archetype_raster, simple_rules):
+        result = ArchetypeProfiler.area_summary(projected_archetype_raster, simple_rules)
+        assert set(result["code"]) == {"B1", "C4"}
+
+
 class TestExpandCommunitySystems:
     def test_known_category_returned(self):
         result = ArchetypeProfiler.expand_community_systems(["water"])

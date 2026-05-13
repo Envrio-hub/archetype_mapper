@@ -279,6 +279,28 @@ The returned `lookup` dict maps each CLU integer ID to its metadata:
 
 ## Changelog
 
+### 0.1.2
+
+#### New: archetype area summary
+
+- `ArchetypeProfiler.area_summary(archetype_raster, rules)` — returns a
+  `pandas.DataFrame` with pixel count, area in hectares, and coverage
+  percentage for each archetype present in the raster, sorted by coverage
+  in descending order.
+- Raises `ValueError` if the raster CRS is geographic (degrees); a projected
+  CRS with metre units (e.g. EPSG:3035) is required for accurate area
+  calculation.
+
+```python
+summary = profiler.area_summary(archetype_raster, rules)
+print(summary)
+#   code                          name  pixel_count   area_ha  coverage_pct
+# 0   C4  Inland Natural Plains & ...        38200  38200.00         62.95
+# 1   B1                  Inland Urban        22500  22500.00         37.07
+```
+
+---
+
 ### 0.1.1
 
 #### New: Climate-Land Unit classification

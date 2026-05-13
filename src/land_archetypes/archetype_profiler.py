@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 import numpy as np
+import pandas as pd
 import xarray as xr
 
 _KCS_CATALOGUE_PATH = Path(__file__).parent / "kcs_catalogue.json"
@@ -205,6 +206,94 @@ class ArchetypeProfiler:
             "required_hazard_layers":    sorted(all_hazards),
             "community_systems_at_risk": sorted(all_kcs),
         }
+
+    @staticmethod
+    def area_summary(
+        archetype_raster: xr.DataArray,
+        rules: Dict[str, Any],
+    ) -> pd.DataFrame:
+        """
+        Return a DataFrame with pixel count, area in hectares, and coverage
+        percentage for each archetype present in the raster.
+
+        Parameters
+        ----------
+        archetype_raster:
+            UInt8 raster from ArchetypeClassification.derive_archetype_raster_map.
+            Must carry attrs["class_id_lookup"] and be in a projected CRS with
+            metre units (e.g. EPSG:3035). Geographic CRS (degrees) raises a
+            ValueError because pixel size in degrees cannot be converted to
+            hectares without re-projection.
+        rules:
+            Archetype rule dict loaded from archetype_classes.json.
+
+        Returns
+        -------
+        pd.DataFrame with columns:
+            "code"          — archetype key (e.g. "B1", "C4")
+            "name"          — archetype name from the rule set
+            "pixel_count"   — number of pixels classified as this archetype
+            "area_ha"       — total area in hectares
+            "coverage_pct"  — percentage of the total valid (non-NoData) area
+
+        Rows are sorted by coverage_pct descending (dominant archetypes first).
+
+        Example
+        -------
+        summary = profiler.area_summary(archetype_raster, rules)
+        print(summary)
+        #   code                          name  pixel_count   area_ha  coverage_pct
+        # 0   C4  Inland Natural Plains & ...        38200  38200.00         62.95
+        # 1   B1                  Inland Urban        22500  22500.00         37.07
+        """
+        if "class_id_lookup" not in archetype_raster.attrs:
+            raise ValueError(
+                "archetype_raster.attrs must contain 'class_id_lookup'. "
+                "Use the raster returned by ArchetypeClassification.derive_archetype_raster_map."
+            )
+
+        crs = archetype_raster.rio.crs
+        if crs is None:
+            raise ValueError(
+                "archetype_raster has no CRS. Set a CRS before computing area."
+            )
+        if crs.is_geographic:
+            raise ValueError(
+                f"archetype_raster CRS ({crs}) is geographic (degrees). "
+                "Reproject to a projected CRS with metre units (e.g. EPSG:3035) "
+                "before computing area in hectares."
+            )
+
+        x_res, y_res = archetype_raster.rio.resolution()
+        pixel_area_ha = abs(x_res * y_res) / 10_000
+
+        id_to_key: Dict[int, str] = {
+            v: k for k, v in archetype_raster.attrs["class_id_lookup"].items()
+        }
+        arch_nodata = int(archetype_raster.rio.nodata)
+        arr = archetype_raster.squeeze().values if "band" in archetype_raster.dims else archetype_raster.values
+
+        present_ids = np.unique(arr)
+        present_ids = present_ids[present_ids != arch_nodata]
+        total_valid = int(np.sum(arr != arch_nodata))
+
+        rows = []
+        for arch_id in present_ids:
+            arch_key = id_to_key.get(int(arch_id))
+            if arch_key is None or arch_key not in rules:
+                continue
+
+            pixel_count = int(np.sum(arr == arch_id))
+            rows.append({
+                "code":         arch_key,
+                "name":         rules[arch_key].get("name", ""),
+                "pixel_count":  pixel_count,
+                "area_ha":      round(pixel_count * pixel_area_ha, 2),
+                "coverage_pct": round(pixel_count / total_valid * 100, 2) if total_valid > 0 else 0.0,
+            })
+
+        df = pd.DataFrame(rows, columns=["code", "name", "pixel_count", "area_ha", "coverage_pct"])
+        return df.sort_values("coverage_pct", ascending=False).reset_index(drop=True)
 
     @staticmethod
     def expand_community_systems(
