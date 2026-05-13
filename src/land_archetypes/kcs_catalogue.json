@@ -1,0 +1,178 @@
+{
+    "water": [
+        {
+            "id": 1,
+            "name": "drinking water distribution network",
+            "description": "Network of pipelines delivering potable water to consumers."
+        },
+        {
+            "id": 2,
+            "name": "drinking water treatment plants",
+            "description": "Facilities that treat raw water to meet drinking standards."
+        },
+        {
+            "id": 3,
+            "name": "wastewater treatment plants",
+            "description": "Facilities that treat sewage before environmental discharge."
+        },
+        {
+            "id": 4,
+            "name": "stormwater drainage system",
+            "description": "Infrastructure that collects and conveys rainwater runoff."
+        },
+        {
+            "id": 5,
+            "name": "irrigation water distribution system",
+            "description": "Infrastructure that transfers water from sources to agricultural fields for crop irrigation."
+        }
+    ],
+    "transportation": [
+        {
+            "id": 6,
+            "name": "ports/harbors",
+            "description": "Coastal facilities for ship docking and cargo handling."
+        },
+        {
+            "id": 7,
+            "name": "railways",
+            "description": "Rail infrastructure for passenger and freight transport."
+        },
+        {
+            "id": 8,
+            "name": "airports",
+            "description": "Facilities supporting aircraft operations and air travel."
+        },
+        {
+            "id": 9,
+            "name": "public transport systems",
+            "description": "Organised transport services for mass passenger movement."
+        },
+        {
+            "id": 10,
+            "name": "road networks",
+            "description": "Interconnected roads enabling land transportation."
+        }
+    ],
+    "energy": [
+        {
+            "id": 11,
+            "name": "power plants",
+            "description": "Facilities generating electricity from various energy sources."
+        },
+        {
+            "id": 12,
+            "name": "transmission and distribution grid",
+            "description": "Infrastructure delivering electricity from producers to users."
+        },
+        {
+            "id": 13,
+            "name": "renewable energy infrastructure",
+            "description": "Installations generating energy from renewable sources."
+        },
+        {
+            "id": 14,
+            "name": "refineries",
+            "description": "Facilities processing crude oil into usable fuels."
+        }
+    ],
+    "food": [
+        {
+            "id": 15,
+            "name": "agricultural production",
+            "description": "Cultivation of crops and livestock for food supply."
+        },
+        {
+            "id": 16,
+            "name": "storages (e.g., silos)",
+            "description": "Facilities for storing agricultural and food products."
+        },
+        {
+            "id": 17,
+            "name": "food processing facilities",
+            "description": "Plants transforming raw food into consumable products."
+        },
+        {
+            "id": 18,
+            "name": "local markets",
+            "description": "Retail spaces for food and local product distribution."
+        }
+    ],
+    "health": [
+        {
+            "id": 19,
+            "name": "hospitals",
+            "description": "Medical institutions providing inpatient and emergency care."
+        },
+        {
+            "id": 20,
+            "name": "pharmacies",
+            "description": "Facilities dispensing medicines and health products."
+        },
+        {
+            "id": 21,
+            "name": "emergency medical services",
+            "description": "Rapid-response medical care and ambulance services."
+        }
+    ],
+    "communication": [
+        {
+            "id": 22,
+            "name": "telecommunications (mobile, internet)",
+            "description": "Networks enabling digital and voice communication services."
+        }
+    ],
+    "education": [
+        {
+            "id": 23,
+            "name": "schools",
+            "description": "Institutions providing primary and secondary education."
+        },
+        {
+            "id": 24,
+            "name": "universities",
+            "description": "Institutions providing higher education and research."
+        },
+        {
+            "id": 25,
+            "name": "athletic centers",
+            "description": "Facilities supporting sports, recreation, and physical activity."
+        }
+    ],
+    "environmental & ecosystem": [
+        {
+            "id": 26,
+            "name": "wetlands, rivers, floodplains",
+            "description": "Natural systems that store and regulate water, reducing flood risk and supporting biodiversity."
+        },
+        {
+            "id": 27,
+            "name": "soil",
+            "description": "Natural resource supporting vegetation growth, water filtration, and nutrient cycling."
+        },
+        {
+            "id": 28,
+            "name": "urban green spaces",
+            "description": "Vegetated areas within urban environments that provide cooling, recreation, and ecological benefits."
+        },
+        {
+            "id": 29,
+            "name": "dunes, reefs",
+            "description": "Natural coastal features that buffer wave energy and reduce erosion and storm surge impacts."
+        },
+        {
+            "id": 30,
+            "name": "forests",
+            "description": "Tree-dominated ecosystems providing carbon storage, erosion control, biodiversity, and climate regulation."
+        },
+        {
+            "id": 31,
+            "name": "lagoons and freshwater lakes",
+            "description": "Inland surface water bodies storing freshwater and supporting biodiversity, water supply, and local climate regulation."
+        },
+        {
+            "id": 32,
+            "name": "groundwater resources",
+            "description": "Subsurface freshwater reserves in aquifers supplying drinking water, irrigation, and ecosystem baseflow."
+        }
+    ]
+}

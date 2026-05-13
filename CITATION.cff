@@ -1,0 +1,37 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "landarchetypes"
+abstract: >-
+  A Python library for deriving landscape archetype and Climate-Land Unit
+  rasters as geospatial exposure layers in support of climate risk assessment.
+  Implements a two-stage workflow: rule-based structural classification of the
+  landscape into 15 archetype classes (Stage 1), and optional unsupervised
+  within-archetype clustering on mean annual precipitation and temperature to
+  produce Climate-Land Units (Stage 2).
+authors:
+  - family-names: Tsakmakis
+    given-names: Ioannis
+    email: itsakmak@envrio.org
+    affiliation: "Envrio"
+    orcid: "https://orcid.org/0000-0001-5140-1259"
+  - family-names: Kokkos
+    given-names: Nikolaos
+    email: nkokkos@envrio.org
+    affiliation: "Envrio"
+    orcid: "https://orcid.org/0000-0003-2514-7343"
+repository-code: "https://github.com/Envrio-hub/archetype_mapper"
+version: "0.1.1"
+date-released: "2026-05-13"
+license: MIT
+keywords:
+  - geospatial
+  - landscape archetypes
+  - climate-land units
+  - exposure
+  - climate risk assessment
+  - land cover
+  - CORINE
+  - EUNIS
+  - raster classification
+  - Python

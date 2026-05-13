@@ -11,10 +11,14 @@ from rasterio.enums import Resampling
 from rasterio.crs import CRS
 
 @dataclass
-class GeospacialProcessingUntilities:
+class GeospatialProcessingUtilities:
     output_path: str
     study_area_path: str
-    study_area_layer: Optional[str] = None 
+    study_area_layer: Optional[str] = None
+
+    @staticmethod
+    def _as_1band(da: xr.DataArray) -> xr.DataArray:
+        return da.isel(band=0) if "band" in da.dims else da
 
     def clip_raster_by_vector(
         self,
@@ -31,8 +35,9 @@ class GeospacialProcessingUntilities:
         raster_crs_override: Optional[Union[str, int]] = None,
         output_nodata: Optional[float] = None,
         resampling: Resampling = Resampling.nearest,
+        compress: str = "LZW",
     ) -> None:
-        """ 
+        """
         Parameters
         ----------
         output_crs:
@@ -51,15 +56,15 @@ class GeospacialProcessingUntilities:
             If provided, forces nodata value in output; otherwise uses raster nodata (or keeps existing).
         resampling:
             Resampling used if output_crs reprojection is requested.
+        compress:
+            Compression for output GeoTIFF (default "LZW").
         """
 
         # ---- 1) Load raster ----
-        raster = rxr.open_rasterio(raster_path, masked=True)
+        raster = rxr.open_rasterio(raster_path, masked=True, chunks="auto")
 
-        # Ensure spatial dims are set (usually "x","y" already)
         raster = raster.rio.set_spatial_dims(x_dim="x", y_dim="y", inplace=False)
 
-        # Optionally override/assign raster CRS if missing/wrong
         if raster_crs_override is not None:
             raster = raster.rio.write_crs(raster_crs_override, inplace=False)
 
@@ -69,7 +74,7 @@ class GeospacialProcessingUntilities:
                 "or fix the raster metadata."
             )
 
-        # ---- 2) Load vector properly with geopandas ----
+        # ---- 2) Load vector ----
         vector_path = vector_path or self.study_area_path
         vector_layer = vector_layer or self.study_area_layer
         gdf = gpd.read_file(vector_path, layer=vector_layer) if vector_layer else gpd.read_file(vector_path)
@@ -77,11 +82,9 @@ class GeospacialProcessingUntilities:
         if gdf.empty:
             raise ValueError("Vector file contains no features.")
 
-        # Fix invalid geometries (common cause of clip failures)
-        # buffer(0) can fix many self-intersections; if it fails, you can switch to shapely.make_valid
-        gdf["geometry"] = gdf.geometry.buffer(0)
+        gdf = gdf[gdf.geometry.notnull()].copy()
+        gdf["geometry"] = gdf.geometry.make_valid()
 
-        # Optionally override/assign vector CRS if missing/wrong
         if vector_crs_override is not None:
             gdf = gdf.set_crs(vector_crs_override, allow_override=True)
 
@@ -92,21 +95,19 @@ class GeospacialProcessingUntilities:
             )
 
         # ---- 3) Reproject vector to raster CRS if needed ----
-        if gdf.crs != raster.rio.crs:
+        if not gdf.crs.equals(raster.rio.crs):
             gdf = gdf.to_crs(raster.rio.crs)
 
-        minx, miny, maxx, maxy = gdf.total_bounds
-        subset = raster.rio.clip_box(minx=minx, miny=miny, maxx=maxx, maxy=maxy)
-
         # Dissolve to a single geometry to avoid slivers / per-feature masking issues
-        geom = gdf.unary_union
+        geom = gdf.union_all()
 
         # ---- 4) Clip + mask outside polygon ----
-        # rioxarray.clip accepts GeoJSON-like mappings or shapely geometries
-        # drop=True -> crops to bounds; drop=False -> keeps extent but masks outside geometry
         drop = crop_to_vector_bounds
 
         if mask_outside_vector:
+            # Pre-clip to bounding box before the more expensive polygon clip
+            minx, miny, maxx, maxy = gdf.total_bounds
+            subset = raster.rio.clip_box(minx=minx, miny=miny, maxx=maxx, maxy=maxy)
             clipped = subset.rio.clip(
                 [geom],
                 crs=raster.rio.crs,
@@ -114,28 +115,21 @@ class GeospacialProcessingUntilities:
                 all_touched=all_touched,
             )
         else:
-            # If you don't want masking, you essentially just crop to bounds (if enabled)
-            # Keeping extent without masking doesn't make much sense; we implement crop-only behavior.
-            if not crop_to_vector_bounds:
-                clipped = raster  # no-op
-            else:
+            if crop_to_vector_bounds:
                 clipped = raster.rio.clip_box(*gdf.total_bounds)
+            else:
+                clipped = raster  # no-op
 
         # ---- 5) Enforce/choose nodata behavior ----
-        # If raster already has nodata, masked=True will preserve it as NaN/mask.
-        # You can write an explicit nodata if you want consistent output.
         if output_nodata is not None:
             clipped = clipped.rio.write_nodata(output_nodata, inplace=False)
 
         # ---- 6) Optional: reproject output to user-defined CRS ----
         if output_crs is not None:
-            clipped = clipped.rio.reproject(
-                output_crs,
-                resampling=resampling
-            )
+            clipped = clipped.rio.reproject(output_crs, resampling=resampling)
 
         # ---- 7) Write GeoTIFF ----
-        clipped.rio.to_raster(f'{self.output_path}/{output_tif_name}')
+        clipped.rio.to_raster(f'{self.output_path}/{output_tif_name}', compress=compress)
 
     def clip_vector_by_vector(
         self,
@@ -179,9 +173,8 @@ class GeospacialProcessingUntilities:
         if gdf.empty:
             raise ValueError("Input vector file contains no features.")
 
-        # Fix invalid geometries (common cause of overlay failures)
         gdf = gdf[gdf.geometry.notnull()].copy()
-        gdf["geometry"] = gdf.geometry.buffer(0)
+        gdf["geometry"] = gdf.geometry.make_valid()
 
         if vector_crs_override is not None:
             gdf = gdf.set_crs(vector_crs_override, allow_override=True)
@@ -206,7 +199,7 @@ class GeospacialProcessingUntilities:
             raise ValueError("Clipper vector file contains no features.")
 
         clip_gdf = clip_gdf[clip_gdf.geometry.notnull()].copy()
-        clip_gdf["geometry"] = clip_gdf.geometry.buffer(0)
+        clip_gdf["geometry"] = clip_gdf.geometry.make_valid()
 
         if clipper_crs_override is not None:
             clip_gdf = clip_gdf.set_crs(clipper_crs_override, allow_override=True)
@@ -218,16 +211,15 @@ class GeospacialProcessingUntilities:
             )
 
         # ---- 3) Reproject clipper to input CRS if needed ----
-        if clip_gdf.crs != gdf.crs:
+        if not clip_gdf.crs.equals(gdf.crs):
             clip_gdf = clip_gdf.to_crs(gdf.crs)
 
         # Dissolve clipper to a single geometry to avoid slivers and speed up clip
-        clip_geom = clip_gdf.unary_union
+        clip_geom = clip_gdf.union_all()
 
         # ---- 4) Clip ----
         clipped = gpd.clip(gdf, clip_geom, keep_geom_type=keep_geom_type)
 
-        # Optional: drop empties that can appear after clip
         clipped = clipped[clipped.geometry.notnull() & ~clipped.geometry.is_empty].copy()
 
         # ---- 5) Optional: reproject output ----
@@ -237,7 +229,7 @@ class GeospacialProcessingUntilities:
         # ---- 6) Write output ----
         out_path = f"{self.output_path}/{output_vector_name}"
         clipped.to_file(out_path, driver=driver)
-    
+
     def create_line_buffer_raster(
         self,
         buffer_name: str,
@@ -260,7 +252,11 @@ class GeospacialProcessingUntilities:
         nodata = np.uint8(255)
 
         # --- Load & reproject study area to EPSG:3035 ---
-        study_gdf = gpd.read_file(self.study_area_path, layer=self.study_area_layer) if self.study_area_layer else gpd.read_file(self.study_area_path)
+        study_gdf = (
+            gpd.read_file(self.study_area_path, layer=self.study_area_layer)
+            if self.study_area_layer
+            else gpd.read_file(self.study_area_path)
+        )
         if study_gdf.empty:
             raise ValueError("Study area layer is empty.")
         if study_gdf.crs is None:
@@ -269,9 +265,9 @@ class GeospacialProcessingUntilities:
         study_gdf = study_gdf[study_gdf.geometry.notnull()].copy()
         study_gdf["geometry"] = study_gdf.geometry.make_valid()
         study_gdf = study_gdf.to_crs(work_crs)
-        study_union = study_gdf.unary_union
+        study_union = study_gdf.union_all()
 
-        # --- Load & reproject coastline to EPSG:3035 ---
+        # --- Load & reproject line layer to EPSG:3035 ---
         coast_gdf = gpd.read_file(line_path, layer=line_layer) if line_layer else gpd.read_file(line_path)
         if coast_gdf.empty:
             raise ValueError("Coastline layer is empty.")
@@ -288,23 +284,17 @@ class GeospacialProcessingUntilities:
         # --- Buffer coastline (meters in EPSG:3035) ---
         buffer_geom = None
         if not coast_clipped.empty:
-            buffer_geom = coast_clipped.geometry.buffer(buffer_distance).unary_union
+            buffer_geom = coast_clipped.geometry.buffer(buffer_distance).union_all()
 
         # --- Build target grid (in EPSG:3035) as an xarray DataArray ---
         if reference_raster_path is not None:
-            ref = rxr.open_rasterio(reference_raster_path, masked=True)
+            ref = rxr.open_rasterio(reference_raster_path, masked=True, chunks="auto")
 
             if ref.rio.crs is None:
                 raise ValueError("Reference raster CRS is missing.")
 
-            # Reproject reference raster to EPSG:3035 to obtain a working grid
-            ref_3035 = ref.rio.reproject(
-                work_crs,
-                resampling=Resampling.nearest,
-            )
-
-            # Use first band as template
-            template = ref_3035.isel(band=0)
+            # Single reproject to EPSG:3035; _as_1band guards against missing band dim
+            template = self._as_1band(ref).rio.reproject(work_crs, resampling=Resampling.nearest)
             transform = template.rio.transform()
             height, width = template.shape
         else:
@@ -316,12 +306,10 @@ class GeospacialProcessingUntilities:
             height = int(np.ceil((maxy - miny) / pixel_size))
             transform = from_bounds(minx, miny, maxx, maxy, width, height)
 
-            # Create coordinates aligned with transform
-            # x = centers from left to right, y = centers from top to bottom
             x0 = transform.c + transform.a / 2.0
             y0 = transform.f + transform.e / 2.0
             xs = x0 + np.arange(width) * transform.a
-            ys = y0 + np.arange(height) * transform.e  # transform.e is negative for north-up
+            ys = y0 + np.arange(height) * transform.e
 
             template = xr.DataArray(
                 np.zeros((height, width), dtype=np.uint8),
@@ -370,7 +358,6 @@ class GeospacialProcessingUntilities:
             out_da = out_da.rio.reproject(dst_crs, resampling=Resampling.nearest)
 
         # --- Write GeoTIFF ---
-        # Ensure a single-band GeoTIFF (DataArray)
         out_da.rio.to_raster(f'{self.output_path}/{buffer_name}', compress=compress)
 
     def add_two_rasters(
@@ -400,15 +387,14 @@ class GeospacialProcessingUntilities:
             If None and integer output, defaults to 255 for uint8, else raises.
         """
 
-        # Ensure extension/driver
         if not output_name.lower().endswith(".tif"):
             output_name += ".tif"
 
         target_crs = CRS.from_user_input(target_crs)
 
         # --- Load rasters (first band) ---
-        r1 = rxr.open_rasterio(raster1_path, masked=True).isel(band=0)
-        r2 = rxr.open_rasterio(raster2_path, masked=True).isel(band=0)
+        r1 = self._as_1band(rxr.open_rasterio(raster1_path, masked=True, chunks="auto"))
+        r2 = self._as_1band(rxr.open_rasterio(raster2_path, masked=True, chunks="auto"))
 
         if r1.rio.crs is None or r2.rio.crs is None:
             raise ValueError("Both rasters must have a defined CRS.")
@@ -427,26 +413,30 @@ class GeospacialProcessingUntilities:
         if not np.allclose(r1.rio.resolution(), r2.rio.resolution()):
             raise ValueError("Raster resolutions differ (pixel size mismatch).")
 
-        if r1.rio.transform() != r2.rio.transform():
+        t1, t2 = r1.rio.transform(), r2.rio.transform()
+        if not np.allclose(
+            [t1.a, t1.b, t1.c, t1.d, t1.e, t1.f],
+            [t2.a, t2.b, t2.c, t2.d, t2.e, t2.f],
+        ):
             raise ValueError("Raster transforms differ (pixel alignment mismatch).")
 
         if not np.allclose(r1.rio.bounds(), r2.rio.bounds()):
             raise ValueError("Raster extents differ.")
 
-        # --- Add ---
-        result = r1 + r2
+        # --- Add (widen integers to int32 to prevent silent overflow) ---
+        if np.issubdtype(r1.dtype, np.integer):
+            result = r1.astype(np.int32) + r2.astype(np.int32)
+        else:
+            result = r1 + r2
 
         # --- Apply threshold mask (< min_value => NoData/NaN) ---
         if min_value is not None:
             is_integer = np.issubdtype(result.dtype, np.integer)
 
             if not is_integer:
-                # float output -> NaN mask
                 result = result.where(result >= min_value)
             else:
-                # integer output -> need a nodata sentinel
                 if integer_nodata is None:
-                    # Safe default only for uint8; otherwise user must decide
                     if result.dtype == np.uint8:
                         integer_nodata = 255
                     else:
@@ -461,11 +451,7 @@ class GeospacialProcessingUntilities:
         # --- Write output ---
         output_path = self.output_path if output_path is None else output_path
         out_path = f"{output_path}/{output_name}"
-        result.rio.to_raster(
-            out_path,
-            driver="GTiff",
-            compress=compress,
-        )
+        result.rio.to_raster(out_path, driver="GTiff", compress=compress)
 
     def reproject_rasters(
         self,
@@ -477,38 +463,35 @@ class GeospacialProcessingUntilities:
         categorical_keys: Optional[set] = None,
     ) -> Dict[str, xr.DataArray]:
         """
-        Reproject all rasters to EPSG:3035 and match them to a common 30m grid.
+        Reproject all rasters to target_crs and match them to a common grid.
         """
-        def _as_1band(da: xr.DataArray) -> xr.DataArray:
-            return da.isel(band=0) if "band" in da.dims else da
-        
         if categorical_keys is None:
             categorical_keys = {"clc", "eunis", "coast_buffer", "river_buffer"}
 
-        ref = _as_1band(rasters[reference_key])
+        ref = self._as_1band(rasters[reference_key])
         if ref.rio.crs is None:
             raise ValueError(f"Reference raster '{reference_key}' has no CRS.")
 
-        # Create a 30m reference grid in EPSG:3035
-        ref_3035 = ref.rio.reproject(target_crs, resampling=Resampling.nearest)
-        ref_30 = ref_3035.rio.reproject(
+        # Single reproject to target CRS at the desired resolution (avoids double resampling)
+        ref_grid = ref.rio.reproject(
             target_crs,
             resolution=pixel_size,
             resampling=Resampling.nearest,
         )
 
-        out = {reference_key: ref_30}
+        out = {reference_key: ref_grid}
 
         for k, da in rasters.items():
-            da1 = _as_1band(da)
+            if k == reference_key:
+                continue
+
+            da1 = self._as_1band(da)
             if da1.rio.crs is None:
                 raise ValueError(f"Raster '{k}' has no CRS.")
 
             resamp = Resampling.nearest if k in categorical_keys else Resampling.bilinear
 
-            da_3035 = da1.rio.reproject(target_crs, resampling=resamp)
-            da_match = da_3035.rio.reproject_match(ref_30, resampling=resamp)
-
-            out[k] = da_match
+            da_reprojected = da1.rio.reproject(target_crs, resampling=resamp)
+            out[k] = da_reprojected.rio.reproject_match(ref_grid, resampling=resamp)
 
         return out
