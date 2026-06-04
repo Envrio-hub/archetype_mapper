@@ -1,0 +1,13 @@
+<PAMDataset>
+  <PAMRasterBand band="1">
+    <Description>coast_buffer</Description>
+    <Metadata>
+      <MDI key="STATISTICS_APPROXIMATE">YES</MDI>
+      <MDI key="STATISTICS_MINIMUM">0</MDI>
+      <MDI key="STATISTICS_MAXIMUM">1</MDI>
+      <MDI key="STATISTICS_MEAN">0.020156720525856</MDI>
+      <MDI key="STATISTICS_STDDEV">0.1405362129257</MDI>
+      <MDI key="STATISTICS_VALID_PERCENT">34.69</MDI>
+    </Metadata>
+  </PAMRasterBand>
+</PAMDataset>
