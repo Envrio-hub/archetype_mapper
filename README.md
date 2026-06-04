@@ -128,20 +128,20 @@ ensuring that specialised archetypes are not absorbed by broader ones:
 | 8 | B4 | Suburban |
 | 9 | B5 | Mountainous Urban |
 | 10 | B6 | Industrial / Commercial |
-| 11 | D1 | Mountainous/Forested |
-| 12 | D2 | High-Altitude Meadows & Scrub |
-| 13 | C2 | Inland Waterbody Systems |
-| 14 | C3 | Rural Settlements |
-| 15 | C1 | Agricultural Land |
-| 16 | C4 | Inland Natural Plains & Forests |
+| 11 | C2 | Inland Waterbody Systems |
+| 12 | C3 | Rural Settlements |
+| 13 | C1 | Agricultural Land |
+| 14 | C4 | Inland Natural Plains & Forests |
+| 15 | D1 | Mountainous/Forested |
+| 16 | D2 | High-Altitude Meadows & Scrub |
 
 The order can be changed by passing a custom list to the `precedence` parameter:
 
 ```python
 archetype_raster = clf.derive_archetype_raster_map(
     ...,
-    precedence=["B5", "B6", "D2", "D1", "B3", "B2", "B1", "A2", "A3", "A1",
-                "A4", "B4", "C2", "C3", "C1", "C4"],
+    precedence=["B5", "B6", "B3", "B2", "B1", "A2", "A3", "A1",
+                "A4", "B4", "C2", "C3", "C1", "C4", "D1", "D2"],
 )
 ```
 

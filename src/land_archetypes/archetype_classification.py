@@ -64,7 +64,7 @@ class ArchetypeClassification():
             rules = self._apply_overrides(rules, rule_overrides)
 
         if precedence is None:
-            precedence = ["A2", "A3", "A1", "A4", "B3", "B2", "B1", "B4", "B5", "B6", "D1", "D2", "C2", "C3", "C1", "C4"]
+            precedence = ["A2", "A3", "A1", "A4", "B3", "B2", "B1", "B4", "B5", "B6", "C2", "C3", "C1", "C4", "D1", "D2"]
 
         clc     = ras["clc"]
         eunis   = ras["eunis"]
