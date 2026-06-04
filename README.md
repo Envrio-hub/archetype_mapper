@@ -33,7 +33,7 @@ form `C4-1`, `C4-2`, encoding both structural identity and climate variant.
 ## Installation
 
 ```bash
-pip install land-archetypes
+pip install landarchetypes
 ```
 
 Requires Python ≥ 3.12.
@@ -50,12 +50,12 @@ Requires Python ≥ 3.12.
 
 ## Stage 1 — Land Archetype map (mandatory)
 
-The 15 built-in archetype classes span four groups:
+The 16 built-in archetype classes span four groups:
 
 | Group | Classes | Key discriminators |
 |---|---|---|
 | Coastal | A1–A4 | Coastal proximity, EUNIS marine/transitional codes |
-| Urban | B1–B5 | Imperviousness, population density, elevation, river/coastal proximity |
+| Urban | B1–B6 | Imperviousness, population density, elevation, river/coastal proximity |
 | Rural | C1–C4 | CLC agricultural/natural codes, low imperviousness |
 | Mountainous | D1–D2 | Elevation ≥ 300 m, alpine EUNIS codes |
 
@@ -127,19 +127,20 @@ ensuring that specialised archetypes are not absorbed by broader ones:
 | 7 | B1 | Inland Urban |
 | 8 | B4 | Suburban |
 | 9 | B5 | Mountainous Urban |
-| 10 | D1 | Mountainous/Forested |
-| 11 | D2 | High-Altitude Meadows & Scrub |
-| 12 | C2 | Inland Waterbody Systems |
-| 13 | C3 | Rural Settlements |
-| 14 | C1 | Agricultural Land |
-| 15 | C4 | Inland Natural Plains & Forests |
+| 10 | B6 | Industrial / Commercial |
+| 11 | D1 | Mountainous/Forested |
+| 12 | D2 | High-Altitude Meadows & Scrub |
+| 13 | C2 | Inland Waterbody Systems |
+| 14 | C3 | Rural Settlements |
+| 15 | C1 | Agricultural Land |
+| 16 | C4 | Inland Natural Plains & Forests |
 
 The order can be changed by passing a custom list to the `precedence` parameter:
 
 ```python
 archetype_raster = clf.derive_archetype_raster_map(
     ...,
-    precedence=["B5", "D2", "D1", "B3", "B2", "B1", "A2", "A3", "A1",
+    precedence=["B5", "B6", "D2", "D1", "B3", "B2", "B1", "A2", "A3", "A1",
                 "A4", "B4", "C2", "C3", "C1", "C4"],
 )
 ```
@@ -163,6 +164,55 @@ archetype_raster = clf.derive_archetype_raster_map(
 
 The coastline and riverline buffer distances are controlled at preprocessing time via
 `GeospatialProcessingUtilities.create_line_buffer_raster(buffer_distance=...)`.
+
+### CLC fallback for data-inconsistency pixels
+
+In some study areas, CLC and EUNIS disagree at the pixel level (e.g. a pixel mapped as
+agricultural land in CLC but as broadleaved woodland in EUNIS). Such pixels remain
+unclassified (255) after the standard pass because the classifier requires both layers
+to match. The `clc_fallback` option runs a second pass on those pixels only, ignoring
+the EUNIS constraint and relying on CLC and all other spatial/thematic constraints.
+Outside-study-area pixels (CLC = NaN) are never affected.
+
+```python
+archetype_raster = clf.derive_archetype_raster_map(
+    ...,
+    clc_fallback=True,
+    # first pass  → archetypes.tif            (CLC + EUNIS)
+    # second pass → archetypes_clc_fallback.tif  (CLC only for remaining 255 pixels)
+)
+```
+
+### Diagnosing unclassified pixels
+
+`ArchetypeProfiler.diagnose_unclassified` helps identify why pixels remain unclassified.
+For each unclassified pixel (up to `sample_size`, default 50 000) it walks the precedence
+list, finds the first archetype whose CLC codes match, and reports which constraint blocks
+assignment — together with an actionable suggestion for each failure type.
+
+```python
+from land_archetypes import ArchetypeProfiler
+
+diag = ArchetypeProfiler.diagnose_unclassified(
+    archetype_raster=archetype_raster,
+    ras=ras,
+    rules=rules,
+    eunis_code_map=eunis_map,
+    clc_code_map=clc_map,
+)
+
+print(f"Unclassified: {diag['total_unclassified']:,}  ({diag['unclassified_pct']:.1f}%)")
+
+for arch_key, info in diag["failures"].items():
+    print(f"\n{arch_key}  {info['name']}")
+    for r in info["reasons"]:
+        print(f"  {r['sampled_count']:>6,}  {r['description']}")
+        print(f"           → {r['suggestion']}")
+
+# CLC codes absent from all archetype rules
+for entry in diag["no_clc_match"]:
+    print(f"CLC {entry['clc_code']}: {entry['sampled_count']} pixels — {entry['suggestion']}")
+```
 
 ### Profiling a study area
 
@@ -278,6 +328,103 @@ The returned `lookup` dict maps each CLU integer ID to its metadata:
 ---
 
 ## Changelog
+
+### 0.1.5
+
+#### New: B6 — Industrial / Commercial archetype
+
+- Added `B6` to the Urban group in `archetype_classes.json`. Covers industrial and
+  commercial areas (CLC 121) with low or zero residential population that do not meet
+  the population density threshold of B1–B5. No elevation, imperviousness, or
+  population density constraint — classification is driven entirely by CLC 121 and
+  EUNIS J1–J4.
+- Default precedence updated to include B6 at priority 10 (after B5, before D1).
+
+#### New: `GeospatialProcessingUtilities.clear_buffer_overlap`
+
+- Zeros out pixels in a binary buffer raster wherever a second buffer raster is active.
+  Typical use: remove the river buffer in delta zones where it overlaps with the coast
+  buffer, so that coastal archetypes (e.g. A2 Beach-Dune) are not blocked by the
+  river-absence constraint at river mouths.
+
+```python
+geo.clear_buffer_overlap(
+    "river_buffer_cleared.tif",
+    source_buffer_path=str(RIVER_BUF),
+    mask_buffer_path=str(COAST_BUF),
+)
+```
+
+---
+
+### 0.1.4
+
+#### New: CLC fallback classification pass
+
+- `ArchetypeClassification.derive_archetype_raster_map` accepts `clc_fallback: bool = False`.
+  When `True`, a second classification pass runs on pixels that remain unclassified (255)
+  after the first pass. The second pass ignores the EUNIS constraint, relying solely on CLC
+  and all other spatial/thematic constraints. This resolves pixels where CLC and EUNIS disagree
+  due to input data inconsistencies (e.g. agricultural CLC with forest EUNIS).
+  Outside-study-area pixels (CLC = NaN) are never affected.
+  The first-pass result is saved under `archetype_map_name`; the second-pass result is saved
+  as `<stem>_clc_fallback<ext>` (e.g. `archetypes_clc_fallback.tif`).
+
+```python
+archetype_raster = clf.derive_archetype_raster_map(
+    ...,
+    clc_fallback=True,  # saves archetypes_clc_fallback.tif alongside archetypes.tif
+)
+```
+
+#### Enhancement: EUNIS descriptions in diagnostic output
+
+- `ArchetypeProfiler.diagnose_unclassified` now includes the human-readable EUNIS L2
+  label in each failure description, sourced from `eunis_l2_mapping.csv`.
+  Output now reads e.g. `"EUNIS I1 (Arable land and market gardens) not in rule"`
+  instead of `"EUNIS I1 not in rule"`.
+
+---
+
+### 0.1.3
+
+#### New: classification diagnostics
+
+- `ArchetypeProfiler.diagnose_unclassified(archetype_raster, ras, rules, eunis_code_map, clc_code_map)` —
+  identifies why pixels remain unclassified (value 255). For each unclassified pixel (up to
+  `sample_size`, default 50 000) walks the classification precedence list, finds the first
+  archetype whose CLC codes match, and records which constraint blocks assignment.
+  Returns a structured report with per-archetype failure counts, descriptions, and
+  actionable suggestions (e.g. missing EUNIS codes, NaN layers, buffer distance issues).
+
+```python
+diag = ArchetypeProfiler.diagnose_unclassified(
+    archetype_raster, ras, rules, eunis_map, clc_map
+)
+print(diag["unclassified_pct"])          # % of study area still unclassified
+for key, info in diag["failures"].items():
+    for r in info["reasons"]:
+        print(r["description"], "→", r["suggestion"])
+```
+
+#### Updated: archetype rule set (`archetype_classes.json`)
+
+- **C1** — added EUNIS G5 (small woodlands within agricultural matrix);
+  elevation constraint set to `[0, 0]` (unconstrained).
+- **C3** — added EUNIS G1 (broadleaved deciduous woodland in rural settlements);
+  elevation constraint set to `[0, 0]`.
+- **C4** — added EUNIS F4, F5, F6, F7 (Mediterranean and montane shrublands at
+  elevations below 300 m) and G5.
+- **A4** — added EUNIS G5.
+- **D1** — added EUNIS H2 (screes) and H3 (inland cliffs and rock pavements).
+- **D2** — added EUNIS H4 (snow/ice-dominated habitats).
+
+#### New dependency
+
+- `dask[array] >= 2024.1.0` added to package dependencies to support lazy
+  raster loading via `chunks="auto"` in `GeospatialProcessingUtilities`.
+
+---
 
 ### 0.1.2
 
