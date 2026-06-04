@@ -20,3 +20,8 @@ build/
 # Environments
 .env
 .venv
+
+# Input Data
+input_data/
+
+Pipfile

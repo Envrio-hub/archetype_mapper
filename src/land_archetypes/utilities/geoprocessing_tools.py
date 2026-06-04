@@ -360,6 +360,49 @@ class GeospatialProcessingUtilities:
         # --- Write GeoTIFF ---
         out_da.rio.to_raster(f'{self.output_path}/{buffer_name}', compress=compress)
 
+    def clear_buffer_overlap(
+        self,
+        output_name: str,
+        source_buffer_path: str,
+        mask_buffer_path: str,
+        compress: str = "LZW",
+    ) -> None:
+        """
+        Zero out pixels in a binary buffer raster wherever a second buffer raster
+        is active (value == 1).  Preserves NoData from the source raster.
+
+        Typical use: remove the river buffer in delta zones where it overlaps with
+        the coast buffer so that coastal archetypes (e.g. A2 Beach-Dune) are not
+        blocked by the river-absence constraint at river mouths.
+
+        Parameters
+        ----------
+        output_name:
+            Output filename relative to self.output_path.
+        source_buffer_path:
+            Path to the binary buffer raster to be modified (0/1/NoData).
+        mask_buffer_path:
+            Path to the binary buffer raster used as the exclusion mask.
+            Pixels where this raster equals 1 will be set to 0 in the output.
+        compress:
+            Compression for output GeoTIFF (default "LZW").
+        """
+        import rasterio as _rio
+
+        with _rio.open(source_buffer_path) as src_ds:
+            src_arr = src_ds.read(1)
+            profile = src_ds.profile.copy()
+
+        with _rio.open(mask_buffer_path) as msk_ds:
+            msk_arr = msk_ds.read(1)
+
+        result_arr = src_arr.copy()
+        result_arr[(src_arr == 1) & (msk_arr == 1)] = 0
+
+        profile.update(compress=compress)
+        with _rio.open(f"{self.output_path}/{output_name}", "w", **profile) as dst:
+            dst.write(result_arr, 1)
+
     def add_two_rasters(
         self,
         output_name: str,
