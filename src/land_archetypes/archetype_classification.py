@@ -87,7 +87,9 @@ class ArchetypeClassification():
             skip_eunis=False,
         )
         out = out.compute()  # materialise before rio.to_raster alters the lazy graph
+        out = out.rio.set_crs("EPSG:3035")
         out.attrs["class_id_lookup"] = {k: int(v) for k, v in key_to_id.items()}
+        out.attrs["_FillValue"] = 255
         _tif_path = f"{output_path}/{archetype_map_name}"
         out.rio.to_raster(_tif_path, compress=compress)
 

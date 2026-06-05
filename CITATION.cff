@@ -21,8 +21,8 @@ authors:
     affiliation: "Envrio"
     orcid: "https://orcid.org/0000-0003-2514-7343"
 repository-code: "https://github.com/Envrio-hub/archetype_mapper"
-version: "0.1.6"
-date-released: "2026-06-02"
+version: "0.1.7"
+date-released: "2026-06-05"
 license: MIT
 keywords:
   - geospatial
