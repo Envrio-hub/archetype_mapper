@@ -185,10 +185,17 @@ archetype_raster = clf.derive_archetype_raster_map(
 
 ### Diagnosing unclassified pixels
 
-`ArchetypeProfiler.diagnose_unclassified` helps identify why pixels remain unclassified.
-For each unclassified pixel (up to `sample_size`, default 50 000) it walks the precedence
-list, finds the first archetype whose CLC codes match, and reports which constraint blocks
-assignment — together with an actionable suggestion for each failure type.
+Two complementary tools are provided. Use `diagnose_unclassified` for a fast
+statistical summary during rule tuning, and `export_diagnosis_rasters` for a full
+spatial audit once you are ready to inspect the results in a GIS.
+
+#### `diagnose_unclassified` — fast statistical report (sampled)
+
+For each unclassified pixel (up to `sample_size`, default 50 000) walks the precedence
+list, finds the first archetype whose CLC codes match, and reports which constraint
+blocks assignment — together with an actionable suggestion for each failure type.
+EUNIS descriptions are included inline (e.g. `"EUNIS I1 (Arable land and market
+gardens) not in rule"`).
 
 ```python
 from land_archetypes import ArchetypeProfiler
@@ -208,10 +215,36 @@ for arch_key, info in diag["failures"].items():
     for r in info["reasons"]:
         print(f"  {r['sampled_count']:>6,}  {r['description']}")
         print(f"           → {r['suggestion']}")
+```
 
-# CLC codes absent from all archetype rules
-for entry in diag["no_clc_match"]:
-    print(f"CLC {entry['clc_code']}: {entry['sampled_count']} pixels — {entry['suggestion']}")
+#### `export_diagnosis_rasters` — full spatial export (all pixels)
+
+Processes **every** unclassified pixel (no sampling) and writes GeoTIFF rasters to
+`output_path`. Outputs:
+
+- **`{archetype}_{constraint}.tif`** — binary raster (1 = failure, 255 = nodata) for
+  every (archetype, constraint) failure category
+- **`diagnosis_map.tif`** — combined raster encoding the primary failure per pixel as
+  an integer value (0 = classified, 255 = outside study area)
+- **`diagnosis_map_legend.json`** — maps each integer to archetype code, slug, and
+  human-readable description
+- **`diagnosis_map.qml`** — QGIS-ready style file for `diagnosis_map.tif`
+
+```python
+report = ArchetypeProfiler.export_diagnosis_rasters(
+    archetype_raster=archetype_raster,
+    ras=ras,
+    rules=rules,
+    eunis_code_map=eunis_map,
+    clc_code_map=clc_map,
+    output_path="outputs/diagnosis/",
+)
+
+print(f"Total diagnosed: {report['total_diagnosed']:,}")
+for arch_key, info in report["failures"].items():
+    print(f"{arch_key}  {info['name']}  —  {info['sampled_count']:,} pixels")
+    for r in info["reasons"]:
+        print(f"  {r['sampled_count']:>8,}  {r['description']}")
 ```
 
 ### Profiling a study area
