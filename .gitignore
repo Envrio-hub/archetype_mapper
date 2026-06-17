@@ -1,0 +1,27 @@
+# Session history
+.claude_history.md
+
+# Pytest
+.pytest_cache/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+*.egg
+.eggs/
+
+# Environments
+.env
+.venv
+
+# Input Data
+input_data/
+
+Pipfile
