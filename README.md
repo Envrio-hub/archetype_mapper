@@ -362,6 +362,31 @@ The returned `lookup` dict maps each CLU integer ID to its metadata:
 
 ## Changelog
 
+### 0.1.8
+
+#### Enhancement: `crs` parameter in `derive_archetype_raster_map`
+
+- `ArchetypeClassification.derive_archetype_raster_map` now accepts a `crs` keyword
+  argument (default `"EPSG:3035"`). The CRS is written into the output DataArray via
+  `rio.write_crs`, ensuring the projection is embedded in the GeoTIFF metadata.
+  Pass `crs=None` to skip the step when the input rasters already carry the correct CRS.
+
+```python
+archetype_raster = clf.derive_archetype_raster_map(
+    ...,
+    crs="EPSG:3035",   # default; pass None to inherit from inputs
+)
+```
+
+#### Fix: nodata encoding on returned DataArray
+
+- `derive_archetype_raster_map` now calls `rio.write_nodata(output_nodata, inplace=False)`
+  before returning, so the caller always receives a DataArray with nodata correctly
+  encoded regardless of which classification path was taken (standard or CLC fallback).
+  Previously, callers had to apply `write_nodata` manually after the call.
+
+---
+
 ### 0.1.5
 
 #### New: B6 — Industrial / Commercial archetype
