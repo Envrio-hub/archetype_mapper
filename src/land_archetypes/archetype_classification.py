@@ -92,6 +92,7 @@ class ArchetypeClassification():
             out = out.rio.write_crs(crs)
         out.attrs["class_id_lookup"] = {k: int(v) for k, v in key_to_id.items()}
         out.attrs["_FillValue"] = 255
+        out = out.rio.write_nodata(output_nodata, inplace=False)
         _tif_path = f"{output_path}/{archetype_map_name}"
         out.rio.to_raster(_tif_path, compress=compress)
 
@@ -142,6 +143,9 @@ class ArchetypeClassification():
                 skip_eunis=True,
             )
             out.attrs["class_id_lookup"] = {k: int(v) for k, v in key_to_id.items()}
+            if crs is not None:
+                out = out.rio.write_crs(crs)
+            out = out.rio.write_nodata(output_nodata, inplace=False)
             p = Path(archetype_map_name)
             fallback_name = f"{p.stem}_clc_fallback{p.suffix}"
             out.rio.to_raster(f"{output_path}/{fallback_name}", compress=compress)

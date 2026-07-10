@@ -362,6 +362,22 @@ The returned `lookup` dict maps each CLU integer ID to its metadata:
 
 ## Changelog
 
+### 0.1.9
+
+#### Fix: nodata and CRS correctly embedded in output GeoTIFFs
+
+- `derive_archetype_raster_map` now calls `rio.write_nodata` before `rio.to_raster`
+  for both the first-pass (`archetypes.tif`) and the CLC fallback
+  (`archetypes_clc_fallback.tif`) outputs. Previously, nodata was only written on
+  the returned in-memory DataArray, leaving the saved files without an explicit
+  nodata value.
+- `rio.write_crs` is now also applied before `rio.to_raster` for the fallback file.
+  `xr.where` operations inside `_run_pass` can silently drop the CRS coordinate
+  loaded from the first-pass file; the explicit call ensures the projection is always
+  embedded in `archetypes_clc_fallback.tif`.
+
+---
+
 ### 0.1.8
 
 #### Enhancement: `crs` parameter in `derive_archetype_raster_map`
