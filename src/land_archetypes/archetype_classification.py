@@ -23,7 +23,8 @@ class ArchetypeClassification():
             dem_key: str = "dem",
             precip_key: str = "mean_precip",
             temp_key: str = "mean_temp",
-            compress: Optional[str] = "LZW"
+            compress: Optional[str] = "LZW",
+            crs: Optional[str] = "EPSG:3035",
             ) -> xr.DataArray:
         """
         Produces a UInt8 archetype raster with class IDs (1..N) and NoData=255.
@@ -87,9 +88,11 @@ class ArchetypeClassification():
             skip_eunis=False,
         )
         out = out.compute()  # materialise before rio.to_raster alters the lazy graph
-        out = out.rio.set_crs("EPSG:3035")
+        if crs is not None:
+            out = out.rio.write_crs(crs)
         out.attrs["class_id_lookup"] = {k: int(v) for k, v in key_to_id.items()}
         out.attrs["_FillValue"] = 255
+        out = out.rio.write_nodata(output_nodata, inplace=False)
         _tif_path = f"{output_path}/{archetype_map_name}"
         out.rio.to_raster(_tif_path, compress=compress)
 
@@ -140,10 +143,14 @@ class ArchetypeClassification():
                 skip_eunis=True,
             )
             out.attrs["class_id_lookup"] = {k: int(v) for k, v in key_to_id.items()}
+            if crs is not None:
+                out = out.rio.write_crs(crs)
+            out = out.rio.write_nodata(output_nodata, inplace=False)
             p = Path(archetype_map_name)
             fallback_name = f"{p.stem}_clc_fallback{p.suffix}"
             out.rio.to_raster(f"{output_path}/{fallback_name}", compress=compress)
 
+        out = out.rio.write_nodata(output_nodata, inplace=False)
         return out
 
     def _run_pass(

@@ -362,6 +362,47 @@ The returned `lookup` dict maps each CLU integer ID to its metadata:
 
 ## Changelog
 
+### 0.1.9
+
+#### Fix: nodata and CRS correctly embedded in output GeoTIFFs
+
+- `derive_archetype_raster_map` now calls `rio.write_nodata` before `rio.to_raster`
+  for both the first-pass (`archetypes.tif`) and the CLC fallback
+  (`archetypes_clc_fallback.tif`) outputs. Previously, nodata was only written on
+  the returned in-memory DataArray, leaving the saved files without an explicit
+  nodata value.
+- `rio.write_crs` is now also applied before `rio.to_raster` for the fallback file.
+  `xr.where` operations inside `_run_pass` can silently drop the CRS coordinate
+  loaded from the first-pass file; the explicit call ensures the projection is always
+  embedded in `archetypes_clc_fallback.tif`.
+
+---
+
+### 0.1.8
+
+#### Enhancement: `crs` parameter in `derive_archetype_raster_map`
+
+- `ArchetypeClassification.derive_archetype_raster_map` now accepts a `crs` keyword
+  argument (default `"EPSG:3035"`). The CRS is written into the output DataArray via
+  `rio.write_crs`, ensuring the projection is embedded in the GeoTIFF metadata.
+  Pass `crs=None` to skip the step when the input rasters already carry the correct CRS.
+
+```python
+archetype_raster = clf.derive_archetype_raster_map(
+    ...,
+    crs="EPSG:3035",   # default; pass None to inherit from inputs
+)
+```
+
+#### Fix: nodata encoding on returned DataArray
+
+- `derive_archetype_raster_map` now calls `rio.write_nodata(output_nodata, inplace=False)`
+  before returning, so the caller always receives a DataArray with nodata correctly
+  encoded regardless of which classification path was taken (standard or CLC fallback).
+  Previously, callers had to apply `write_nodata` manually after the call.
+
+---
+
 ### 0.1.5
 
 #### New: B6 — Industrial / Commercial archetype

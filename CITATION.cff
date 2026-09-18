@@ -6,7 +6,7 @@ abstract: >-
   A Python library for deriving Landscape Archetype and Climate-Land Unit
   rasters as geospatial exposure layers in support of climate risk assessment.
   Implements a two-stage workflow: rule-based structural classification of the
-  landscape into 15 archetype classes (Stage 1), and optional unsupervised
+  landscape into 16 archetype classes (Stage 1), and optional unsupervised
   within-archetype clustering on mean annual precipitation and temperature to
   produce Climate-Land Units (Stage 2).
 authors:
@@ -21,8 +21,8 @@ authors:
     affiliation: "Envrio"
     orcid: "https://orcid.org/0000-0003-2514-7343"
 repository-code: "https://github.com/Envrio-hub/archetype_mapper"
-version: "0.1.7"
-date-released: "2026-06-05"
+version: "0.1.9"
+date-released: "2026-07-10"
 license: MIT
 keywords:
   - geospatial
