@@ -362,6 +362,19 @@ The returned `lookup` dict maps each CLU integer ID to its metadata:
 
 ## Changelog
 
+### 0.2.0
+
+#### Notebook: distinguish in-region unclassified pixels from outside-study-area pixels
+
+- `demo_workflow.ipynb` (Step 5c summary cell) previously reported "unclassified"
+  pixel counts (`archetypes.tif` / `archetypes_clc_fallback.tif` value `255`)
+  without separating pixels that are genuinely unclassified from pixels that
+  simply fall outside the study area boundary — both share the nodata value `255`.
+- The cell now derives an in-region mask from `clc_clipped.tif` (`NaN` outside
+  the study area) and reports total raster pixels, pixels within the study
+  area, and first-pass/fallback unclassified counts restricted to in-region
+  pixels only.
+
 ### 0.1.9
 
 #### Fix: nodata and CRS correctly embedded in output GeoTIFFs
