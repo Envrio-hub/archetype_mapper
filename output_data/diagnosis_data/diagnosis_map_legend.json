@@ -1,0 +1,248 @@
+{
+  "0": {
+    "archetype": null,
+    "slug": null,
+    "tif": null,
+    "description": "Classified pixel"
+  },
+  "255": {
+    "archetype": null,
+    "slug": null,
+    "tif": null,
+    "description": "Outside study area (nodata)"
+  },
+  "1": {
+    "archetype": "A2",
+    "slug": "eunis_mismatch",
+    "tif": "A2_eunis_mismatch.tif",
+    "description": "A2 (Beach-Dune System): eunis mismatch"
+  },
+  "2": {
+    "archetype": "A2",
+    "slug": "coast_required_but_absent",
+    "tif": "A2_coast_required_but_absent.tif",
+    "description": "A2 (Beach-Dune System): coast required but absent"
+  },
+  "3": {
+    "archetype": "A2",
+    "slug": "river_present_but_excluded",
+    "tif": "A2_river_present_but_excluded.tif",
+    "description": "A2 (Beach-Dune System): river present but excluded"
+  },
+  "4": {
+    "archetype": "A2",
+    "slug": "elevation_out_of_range",
+    "tif": "A2_elevation_out_of_range.tif",
+    "description": "A2 (Beach-Dune System): elevation out of range"
+  },
+  "5": {
+    "archetype": "A3",
+    "slug": "eunis_mismatch",
+    "tif": "A3_eunis_mismatch.tif",
+    "description": "A3 (Transitional Coastal Water System): eunis mismatch"
+  },
+  "6": {
+    "archetype": "A3",
+    "slug": "coast_required_but_absent",
+    "tif": "A3_coast_required_but_absent.tif",
+    "description": "A3 (Transitional Coastal Water System): coast required but absent"
+  },
+  "7": {
+    "archetype": "A3",
+    "slug": "elevation_out_of_range",
+    "tif": "A3_elevation_out_of_range.tif",
+    "description": "A3 (Transitional Coastal Water System): elevation out of range"
+  },
+  "8": {
+    "archetype": "A1",
+    "slug": "eunis_mismatch",
+    "tif": "A1_eunis_mismatch.tif",
+    "description": "A1 (Marine/Subtidal): eunis mismatch"
+  },
+  "9": {
+    "archetype": "A1",
+    "slug": "coast_required_but_absent",
+    "tif": "A1_coast_required_but_absent.tif",
+    "description": "A1 (Marine/Subtidal): coast required but absent"
+  },
+  "10": {
+    "archetype": "A1",
+    "slug": "elevation_out_of_range",
+    "tif": "A1_elevation_out_of_range.tif",
+    "description": "A1 (Marine/Subtidal): elevation out of range"
+  },
+  "11": {
+    "archetype": "A4",
+    "slug": "eunis_mismatch",
+    "tif": "A4_eunis_mismatch.tif",
+    "description": "A4 (Coastal Natural Plains & Forests): eunis mismatch"
+  },
+  "12": {
+    "archetype": "A4",
+    "slug": "coast_required_but_absent",
+    "tif": "A4_coast_required_but_absent.tif",
+    "description": "A4 (Coastal Natural Plains & Forests): coast required but absent"
+  },
+  "13": {
+    "archetype": "A4",
+    "slug": "elevation_out_of_range",
+    "tif": "A4_elevation_out_of_range.tif",
+    "description": "A4 (Coastal Natural Plains & Forests): elevation out of range"
+  },
+  "14": {
+    "archetype": "B3",
+    "slug": "eunis_mismatch",
+    "tif": "B3_eunis_mismatch.tif",
+    "description": "B3 (Coastal Urban): eunis mismatch"
+  },
+  "15": {
+    "archetype": "B3",
+    "slug": "coast_required_but_absent",
+    "tif": "B3_coast_required_but_absent.tif",
+    "description": "B3 (Coastal Urban): coast required but absent"
+  },
+  "16": {
+    "archetype": "B3",
+    "slug": "elevation_out_of_range",
+    "tif": "B3_elevation_out_of_range.tif",
+    "description": "B3 (Coastal Urban): elevation out of range"
+  },
+  "17": {
+    "archetype": "B3",
+    "slug": "imperviousness_out_of_range",
+    "tif": "B3_imperviousness_out_of_range.tif",
+    "description": "B3 (Coastal Urban): imperviousness out of range"
+  },
+  "18": {
+    "archetype": "B3",
+    "slug": "pop_density_out_of_range",
+    "tif": "B3_pop_density_out_of_range.tif",
+    "description": "B3 (Coastal Urban): pop density out of range"
+  },
+  "19": {
+    "archetype": "B4",
+    "slug": "eunis_mismatch",
+    "tif": "B4_eunis_mismatch.tif",
+    "description": "B4 (Suburban): eunis mismatch"
+  },
+  "20": {
+    "archetype": "B4",
+    "slug": "coast_present_but_excluded",
+    "tif": "B4_coast_present_but_excluded.tif",
+    "description": "B4 (Suburban): coast present but excluded"
+  },
+  "21": {
+    "archetype": "B4",
+    "slug": "elevation_out_of_range",
+    "tif": "B4_elevation_out_of_range.tif",
+    "description": "B4 (Suburban): elevation out of range"
+  },
+  "22": {
+    "archetype": "B4",
+    "slug": "imperviousness_out_of_range",
+    "tif": "B4_imperviousness_out_of_range.tif",
+    "description": "B4 (Suburban): imperviousness out of range"
+  },
+  "23": {
+    "archetype": "B4",
+    "slug": "pop_density_out_of_range",
+    "tif": "B4_pop_density_out_of_range.tif",
+    "description": "B4 (Suburban): pop density out of range"
+  },
+  "24": {
+    "archetype": "D1",
+    "slug": "eunis_mismatch",
+    "tif": "D1_eunis_mismatch.tif",
+    "description": "D1 (Mountainous/Forested): eunis mismatch"
+  },
+  "25": {
+    "archetype": "D1",
+    "slug": "elevation_out_of_range",
+    "tif": "D1_elevation_out_of_range.tif",
+    "description": "D1 (Mountainous/Forested): elevation out of range"
+  },
+  "26": {
+    "archetype": "C2",
+    "slug": "eunis_mismatch",
+    "tif": "C2_eunis_mismatch.tif",
+    "description": "C2 (Inland Waterbody Systems): eunis mismatch"
+  },
+  "27": {
+    "archetype": "C2",
+    "slug": "coast_present_but_excluded",
+    "tif": "C2_coast_present_but_excluded.tif",
+    "description": "C2 (Inland Waterbody Systems): coast present but excluded"
+  },
+  "28": {
+    "archetype": "C2",
+    "slug": "elevation_out_of_range",
+    "tif": "C2_elevation_out_of_range.tif",
+    "description": "C2 (Inland Waterbody Systems): elevation out of range"
+  },
+  "29": {
+    "archetype": "C2",
+    "slug": "imperviousness_out_of_range",
+    "tif": "C2_imperviousness_out_of_range.tif",
+    "description": "C2 (Inland Waterbody Systems): imperviousness out of range"
+  },
+  "30": {
+    "archetype": "C3",
+    "slug": "eunis_mismatch",
+    "tif": "C3_eunis_mismatch.tif",
+    "description": "C3 (Rural Settlements): eunis mismatch"
+  },
+  "31": {
+    "archetype": "C3",
+    "slug": "coast_present_but_excluded",
+    "tif": "C3_coast_present_but_excluded.tif",
+    "description": "C3 (Rural Settlements): coast present but excluded"
+  },
+  "32": {
+    "archetype": "C3",
+    "slug": "river_present_but_excluded",
+    "tif": "C3_river_present_but_excluded.tif",
+    "description": "C3 (Rural Settlements): river present but excluded"
+  },
+  "33": {
+    "archetype": "C3",
+    "slug": "elevation_out_of_range",
+    "tif": "C3_elevation_out_of_range.tif",
+    "description": "C3 (Rural Settlements): elevation out of range"
+  },
+  "34": {
+    "archetype": "C3",
+    "slug": "imperviousness_out_of_range",
+    "tif": "C3_imperviousness_out_of_range.tif",
+    "description": "C3 (Rural Settlements): imperviousness out of range"
+  },
+  "35": {
+    "archetype": "C3",
+    "slug": "pop_density_out_of_range",
+    "tif": "C3_pop_density_out_of_range.tif",
+    "description": "C3 (Rural Settlements): pop density out of range"
+  },
+  "36": {
+    "archetype": "C1",
+    "slug": "eunis_mismatch",
+    "tif": "C1_eunis_mismatch.tif",
+    "description": "C1 (Agricultural Land): eunis mismatch"
+  },
+  "37": {
+    "archetype": "C1",
+    "slug": "imperviousness_out_of_range",
+    "tif": "C1_imperviousness_out_of_range.tif",
+    "description": "C1 (Agricultural Land): imperviousness out of range"
+  },
+  "38": {
+    "archetype": "C1",
+    "slug": "pop_density_out_of_range",
+    "tif": "C1_pop_density_out_of_range.tif",
+    "description": "C1 (Agricultural Land): pop density out of range"
+  },
+  "39": {
+    "archetype": "no_clc_match",
+    "slug": "no_clc_match",
+    "tif": "no_clc_match.tif",
+    "description": "No archetype has CLC codes matching this pixel"
+  }
+}

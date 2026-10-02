@@ -1,0 +1,16 @@
+code,name,pixel_count,area_ha,coverage_pct
+D1,Mountainous/Forested,588474,588474.0,42.33
+C1,Agricultural Land,526791,526791.0,37.89
+C4,Inland Natural Plains & Forests,203484,203484.0,14.64
+C2,Inland Waterbody Systems,21532,21532.0,1.55
+C3,Rural Settlements,19147,19147.0,1.38
+A1,Marine/Subtidal,10583,10583.0,0.76
+B6,Industrial / Commercial,6430,6430.0,0.46
+A2,Beach-Dune System,4624,4624.0,0.33
+B1,Inland Urban,3542,3542.0,0.25
+A3,Transitional Coastal Water System,1921,1921.0,0.14
+A4,Coastal Natural Plains & Forests,1096,1096.0,0.08
+B3,Coastal Urban,1157,1157.0,0.08
+B2,Riverine Urban,790,790.0,0.06
+D2,High-Altitude Meadows & Scrub,548,548.0,0.04
+B4,Suburban,47,47.0,0.0
